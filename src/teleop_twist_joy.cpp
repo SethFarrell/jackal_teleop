@@ -219,8 +219,19 @@ void TeleopTwistJoy::Impl::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg
     // B button pressed, decrease speed
     if (joy_msg->buttons[decrease_speed_button] && released_decrease_speed_button)
     {
-      scale_linear_map["normal"]["x"] -= 0.05;
-      scale_linear_map["turbo"]["x"] -= 0.05;
+      if (scale_linear_map["normal"]["x"] - 0.05 >= 0){
+        scale_linear_map["normal"]["x"] -= 0.05;
+      }
+      else {
+        ROS_ERROR_STREAM("Going slower will reverse direction for 'normal' mode. Not applying change.");
+      }
+
+      if (scale_linear_map["turbo"]["x"] - 0.05 >= 0) {
+        scale_linear_map["turbo"]["x"] -= 0.05;
+      }
+      else {
+        ROS_ERROR_STREAM("Going slower will reverse direction for 'turbo' mode. Not applying change.");
+      }
       //scale_angular_map["normal"]["yaw"] -= 0.05;
       //scale_angular_map["turbo"]["yaw"] -= 0.05;
       released_decrease_speed_button = false;

@@ -14,8 +14,8 @@
     <arg name="config" value="$(arg config)" />
   </include>
 
-  <include file="control.launch" />
-  <include file="teleop.launch" />
+  <include file="$(find teleop_twist_joy)/launch/control.launch" />
+  <include file="$(find teleop_twist_joy)/launch/teleop.launch" />
 
   <!-- Spawn Jackal -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
