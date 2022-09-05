@@ -51,6 +51,8 @@ struct TeleopTwistJoy::Impl
   int enable_turbo_button;
   int increase_speed_button;
   int decrease_speed_button;
+  int increase_ang_speed_button;
+  int decrease_ang_speed_button;
 
   std::map<std::string, int> axis_linear_map;
   std::map< std::string, std::map<std::string, double> > scale_linear_map;
@@ -61,6 +63,8 @@ struct TeleopTwistJoy::Impl
   bool sent_disable_msg;
   bool released_increase_speed_button;
   bool released_decrease_speed_button;
+  bool released_increase_ang_speed_button;
+  bool released_decrease_ang_speed_button;
 };
 
 /**
@@ -83,8 +87,13 @@ TeleopTwistJoy::TeleopTwistJoy(ros::NodeHandle* nh, ros::NodeHandle* nh_param)
   // values int eh config file should correspond to joy indices
   nh_param->getParam("increase_speed_button", pimpl_->increase_speed_button);
   nh_param->getParam("decrease_speed_button", pimpl_->decrease_speed_button);
-  pimpl_->released_decrease_speed_button = true;
   pimpl_->released_increase_speed_button = true;
+  pimpl_->released_decrease_speed_button = true;
+
+  nh_param->getParam("increase_ang_speed_button", pimpl_->increase_ang_speed_button);
+  nh_param->getParam("decrease_ang_speed_button", pimpl_->decrease_ang_speed_button);
+  pimpl_->released_increase_ang_speed_button = true;
+  pimpl_->released_decrease_ang_speed_button = true;
 
   // if the parameters are specified in the passed config file "axis_linear, scale_linear, scale_linear_turbo" then store their values
   // in our maps
@@ -111,8 +120,7 @@ TeleopTwistJoy::TeleopTwistJoy(ros::NodeHandle* nh, ros::NodeHandle* nh_param)
   {
     nh_param->param<int>("axis_angular", pimpl_->axis_angular_map["yaw"], 0);
     nh_param->param<double>("scale_angular", pimpl_->scale_angular_map["normal"]["yaw"], 0.5);
-    nh_param->param<double>("scale_angular_turbo",
-        pimpl_->scale_angular_map["turbo"]["yaw"], pimpl_->scale_angular_map["normal"]["yaw"]);
+    nh_param->param<double>("scale_angular_turbo", pimpl_->scale_angular_map["turbo"]["yaw"], pimpl_->scale_angular_map["normal"]["yaw"]);
   }
 
   ROS_INFO_NAMED("TeleopTwistJoy", "Teleop enable button %i.", pimpl_->enable_button);
@@ -200,16 +208,14 @@ void TeleopTwistJoy::Impl::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg
     // If we press the up or down buttons, increase / decrease the linear normal and turbo maps by 0.1
     // system uses ps4.yaml          Y button = 0, B button = 1
 
+    // ------------------------ Adjusting Linear Speed --------------------------------
     // Y button pressed, increase speed
     if (joy_msg->buttons[increase_speed_button] && released_increase_speed_button)
     {
       scale_linear_map["normal"]["x"] += 0.05;
       scale_linear_map["turbo"]["x"] += 0.05;
-      //scale_angular_map["normal"]["yaw"] += 0.05;
-      //scale_angular_map["turbo"]["yaw"] += 0.05;
+
       released_increase_speed_button = false;
-      //std::cout << "Increasing speed by 0.1 !" << std::endl;
-      //ROS_ERROR_STREAM("Button Y pressed...");
     }
     // Y button was released
     else if (!joy_msg->buttons[increase_speed_button] && !released_increase_speed_button) {
@@ -219,28 +225,63 @@ void TeleopTwistJoy::Impl::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg
     // B button pressed, decrease speed
     if (joy_msg->buttons[decrease_speed_button] && released_decrease_speed_button)
     {
-      if (scale_linear_map["normal"]["x"] - 0.05 >= 0){
+      if (scale_linear_map["normal"]["x"] - 0.05 > 0){
         scale_linear_map["normal"]["x"] -= 0.05;
       }
       else {
-        ROS_ERROR_STREAM("Going slower will reverse direction for 'normal' mode. Not applying change.");
+        ROS_ERROR_STREAM("Going slower will reverse direction for linear 'normal' mode. Not applying change.");
       }
 
-      if (scale_linear_map["turbo"]["x"] - 0.05 >= 0) {
+      if (scale_linear_map["turbo"]["x"] - 0.05 > 0) {
         scale_linear_map["turbo"]["x"] -= 0.05;
       }
       else {
-        ROS_ERROR_STREAM("Going slower will reverse direction for 'turbo' mode. Not applying change.");
+        ROS_ERROR_STREAM("Going slower will reverse direction for linear 'turbo' mode. Not applying change.");
       }
-      //scale_angular_map["normal"]["yaw"] -= 0.05;
-      //scale_angular_map["turbo"]["yaw"] -= 0.05;
+
       released_decrease_speed_button = false;
-      //ROS_ERROR_STREAM("Button B pressed...");
-      //std::cout << "Decreasing speed by 0.1 !" << std::endl;
     }
     // B button was released
     else if (!joy_msg->buttons[decrease_speed_button] && !released_decrease_speed_button) {
       released_decrease_speed_button = true;
+    }
+
+    // -------------------------- Adjusting Angular Speed ----------------------------------
+    if (joy_msg->buttons[increase_ang_speed_button] && released_increase_ang_speed_button)
+    {
+      scale_angular_map["normal"]["yaw"] += 0.05;
+      scale_angular_map["turbo"]["yaw"] += 0.05;
+      released_increase_ang_speed_button = false;
+      //ROS_ERROR_STREAM("Button X pressed...");
+    }
+    // X button was released
+    else if (!joy_msg->buttons[increase_ang_speed_button] && !released_increase_ang_speed_button) {
+      released_increase_ang_speed_button = true;
+    }
+
+    // A button pressed, decrease speed
+    if (joy_msg->buttons[decrease_ang_speed_button] && released_decrease_ang_speed_button)
+    {
+      if (scale_angular_map["normal"]["yaw"] - 0.05 > 0){
+        scale_angular_map["normal"]["yaw"] -= 0.05;
+      }
+      else {
+        ROS_ERROR_STREAM("Going slower will reverse direction for angular 'normal' mode. Not applying change.");
+      }
+
+      if (scale_angular_map["turbo"]["yaw"] - 0.05 > 0) {
+        scale_angular_map["turbo"]["yaw"] -= 0.05;
+      }
+      else {
+        ROS_ERROR_STREAM("Going slower will reverse direction for angular 'turbo' mode. Not applying change.");
+      }
+ 
+      released_decrease_ang_speed_button = false;
+      //ROS_ERROR_STREAM("Button A pressed...");
+    }
+    // B button was released
+    else if (!joy_msg->buttons[decrease_ang_speed_button] && !released_decrease_ang_speed_button) {
+      released_decrease_ang_speed_button = true;
     }
 
   }

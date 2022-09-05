@@ -3,7 +3,7 @@
   <arg name="joy_config" default="ps3" />
   <arg name="joy_dev" default="/dev/input/js0" />
 
-  <arg name="config_filepath" default="$(find teleop_twist_joy)/config/ps3.config.yaml" /> 
+  <arg name="config_filepath" default="$(find jackal_teleop)/config/ps3.config.yaml" /> 
 
   <group ns="bluetooth_teleop">
     <node pkg="joy" type="joy_node" name="joy_node">
@@ -12,7 +12,7 @@
       <param name="autorepeat_rate" value="20" />
     </node>
 
-    <node pkg="teleop_twist_joy" name="teleop_twist_joy" type="teleop_node">
+    <node pkg="jackal_teleop" name="teleop_twist_joy" type="teleop_node">
       <rosparam command="load" file="$(arg config_filepath)" />
     </node>
   </group>

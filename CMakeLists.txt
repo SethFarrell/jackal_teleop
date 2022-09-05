@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(teleop_twist_joy)
+project(jackal_teleop)
 
 find_package(catkin REQUIRED COMPONENTS geometry_msgs roscpp sensor_msgs)
 
@@ -11,7 +11,7 @@ catkin_package(
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_library(${PROJECT_NAME} src/${PROJECT_NAME}.cpp)
+add_library(${PROJECT_NAME} src/teleop_twist_joy.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_node src/teleop_node.cpp)
@@ -30,27 +30,3 @@ install(DIRECTORY include/${PROJECT_NAME}/
 install(DIRECTORY launch config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-if (CATKIN_ENABLE_TESTING)
-  find_package(roslint REQUIRED)
-  roslint_cpp(include/ src/)
-  roslint_python()
-  roslint_add_test()
-
-  find_package(roslaunch REQUIRED)
-  roslaunch_add_file_check(launch/teleop.launch)
-
-  find_package(rostest REQUIRED)
-  include_directories(include ${catkin_INCLUDE_DIRS})
-
-  # Check axes and scaling.
-  add_rostest(test/differential_joy.test)
-  add_rostest(test/holonomic_joy.test)
-  add_rostest(test/six_dof_joy.test)
-
-  # Check enable and turbo button logic.
-  add_rostest(test/no_enable_joy.test)
-  add_rostest(test/turbo_enable_joy.test)
-  add_rostest(test/only_turbo_joy.test)
-  add_rostest(test/turbo_angular_enable_joy.test)
-  add_rostest(test/turbo_angular_enable_joy_with_rosparam_map.test)
-endif()

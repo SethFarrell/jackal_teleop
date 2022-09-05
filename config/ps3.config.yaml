@@ -4,8 +4,11 @@ scale_linear_turbo: 1.5
 
 axis_angular: 0
 scale_angular: 0.4
+scale_angular_turbo: 0.4
 
 enable_button: 4 #8  # L2 shoulder button
 enable_turbo_button: 5 #10  # L1 shoulder button
-increase_speed_button: 0
-decrease_speed_button: 1
+increase_speed_button: 0 # Y
+decrease_speed_button: 1 # B
+increase_ang_speed_button: 3 # X
+decrease_ang_speed_button: 2 # A
